@@ -1,171 +1,113 @@
-import React, { useState } from 'react';
-import { Formik, Form, Field } from 'formik';
-import * as Yup from 'yup';
-import { useDispatch } from 'react-redux';
-import { useNavigate } from 'react-router-dom';
-import Swal from 'sweetalert2';
-import { loginStart, loginSuccess, loginFailure } from '../store/authSlice';
-
-const LoginSchema = Yup.object().shape({
-  email: Yup.string()
-    .email('Email inválido')
-    .required('El email es requerido'),
-  password: Yup.string()
-    .min(6, 'La contraseña debe tener al menos 6 caracteres')
-    .required('La contraseña es requerida'),
-});
+import { useState } from 'react'
+import { useDispatch, useSelector } from 'react-redux'
+import { useNavigate } from 'react-router-dom'
+import { login, clearError } from '../store/slices/authSlice'
+import Swal from 'sweetalert2'
 
 const Login = () => {
-  const dispatch = useDispatch();
-  const navigate = useNavigate();
-  const [loading, setLoading] = useState(false);
+  const dispatch = useDispatch()
+  const navigate = useNavigate()
+  const { loading, error } = useSelector((state) => state.auth)
+  
+  const [formData, setFormData] = useState({
+    email: 'admin@inventario.com',
+    password: 'admin123'
+  })
 
-  const handleSubmit = async (values, { setSubmitting, setErrors }) => {
-    try {
-      dispatch(loginStart());
-      setLoading(true);
-
-      // Simulación de login - en producción usarías la API real
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      
-      // Login demo con credenciales hardcodeadas
-      if (values.email === 'admin@admin.com' && values.password === 'admin123') {
-        const userData = {
-          id: 1,
-          name: 'Administrador',
-          email: values.email,
-          role: 'admin',
-        };
-        
-        dispatch(loginSuccess({
-          user: userData,
-          token: 'demo-token-' + Date.now(),
-        }));
-        
-        Swal.fire({
-          icon: 'success',
-          title: '¡Bienvenido!',
-          text: 'Has iniciado sesión correctamente',
-          timer: 1500,
-          showConfirmButton: false,
-        });
-        
-        navigate('/dashboard');
-      } else {
-        throw new Error('Credenciales inválidas');
-      }
-    } catch (error) {
-      dispatch(loginFailure(error.message));
-      setErrors({ submit: error.message });
-      Swal.fire({
-        icon: 'error',
-        title: 'Error',
-        text: error.message,
-      });
-    } finally {
-      setLoading(false);
-      setSubmitting(false);
+  const handleSubmit = async (e) => {
+    e.preventDefault()
+    
+    if (!formData.email || !formData.password) {
+      Swal.fire('Error', 'Por favor complete todos los campos', 'error')
+      return
     }
-  };
+
+    try {
+      await dispatch(login(formData)).unwrap()
+      Swal.fire({
+        icon: 'success',
+        title: 'Bienvenido',
+        text: 'Iniciando sesión...',
+        timer: 1500,
+        showConfirmButton: false
+      })
+      setTimeout(() => navigate('/dashboard'), 1500)
+    } catch (err) {
+      Swal.fire('Error', 'Credenciales incorrectas', 'error')
+    }
+  }
 
   return (
-    <div className="hold-transition login-page bg-dark">
-      <div className="login-box">
-        <div className="card card-outline card-primary">
-          <div className="card-header text-center">
-            <h1 className="h4">
-              <i className="fas fa-boxes me-2"></i>
-              <strong>Inventory</strong> Pro
-            </h1>
-          </div>
-          <div className="card-body">
-            <p className="login-box-msg text-muted">Inicia sesión para continuar</p>
-            
-            <Formik
-              initialValues={{ email: '', password: '' }}
-              validationSchema={LoginSchema}
-              onSubmit={handleSubmit}
-            >
-              {({ errors, touched, isSubmitting }) => (
-                <Form>
-                  <div className="input-group mb-3">
-                    <Field
-                      type="email"
-                      name="email"
-                      className={`form-control ${touched.email && errors.email ? 'is-invalid' : ''}`}
-                      placeholder="Email"
-                      disabled={loading}
-                    />
-                    <div className="input-group-append">
-                      <div className="input-group-text">
-                        <span className="fas fa-envelope"></span>
-                      </div>
-                    </div>
-                    {touched.email && errors.email && (
-                      <div className="invalid-feedback d-block">
-                        {errors.email}
-                      </div>
-                    )}
-                  </div>
-                  
-                  <div className="input-group mb-3">
-                    <Field
-                      type="password"
-                      name="password"
-                      className={`form-control ${touched.password && errors.password ? 'is-invalid' : ''}`}
-                      placeholder="Contraseña"
-                      disabled={loading}
-                    />
-                    <div className="input-group-append">
-                      <div className="input-group-text">
-                        <span className="fas fa-lock"></span>
-                      </div>
-                    </div>
-                    {touched.password && errors.password && (
-                      <div className="invalid-feedback d-block">
-                        {errors.password}
-                      </div>
-                    )}
-                  </div>
-                  
-                  <div className="row">
-                    <div className="col-8">
-                      <div className="icheck-primary">
-                        <input type="checkbox" id="remember" />
-                        <label htmlFor="remember">Recuérdame</label>
-                      </div>
-                    </div>
-                    <div className="col-4">
-                      <button 
-                        type="submit" 
-                        className="btn btn-primary btn-block w-100"
-                        disabled={loading || isSubmitting}
-                      >
-                        {loading ? (
-                          <>
-                            <span className="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
-                            Entrando...
-                          </>
-                        ) : (
-                          'Entrar'
-                        )}
-                      </button>
-                    </div>
-                  </div>
-                </Form>
-              )}
-            </Formik>
-
-            <div className="text-center mt-3">
-              <p className="mb-0 text-muted small">
-                Demo: admin@admin.com / admin123
-              </p>
+    <div className="login-page">
+      <div className="login-card">
+        <div className="brand-logo">
+          <h2><i className="fas fa-boxes"></i> InventarioPro</h2>
+          <p className="text-muted">Sistema de Gestión</p>
+        </div>
+        
+        <form onSubmit={handleSubmit}>
+          <div className="mb-3">
+            <label className="form-label">Email</label>
+            <div className="input-group">
+              <span className="input-group-text">
+                <i className="fas fa-envelope"></i>
+              </span>
+              <input
+                type="email"
+                className="form-control"
+                placeholder="admin@inventario.com"
+                value={formData.email}
+                onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+              />
             </div>
           </div>
+          
+          <div className="mb-3">
+            <label className="form-label">Contraseña</label>
+            <div className="input-group">
+              <span className="input-group-text">
+                <i className="fas fa-lock"></i>
+              </span>
+              <input
+                type="password"
+                className="form-control"
+                placeholder="••••••••"
+                value={formData.password}
+                onChange={(e) => setFormData({ ...formData, password: e.target.value })}
+              />
+            </div>
+          </div>
+          
+          <div className="mb-3 form-check">
+            <input type="checkbox" className="form-check-input" id="remember" />
+            <label className="form-check-label" htmlFor="remember">Recordarme</label>
+          </div>
+          
+          <button 
+            type="submit" 
+            className="btn btn-primary w-100"
+            disabled={loading}
+          >
+            {loading ? (
+              <>
+                <span className="spinner-border spinner-border-sm me-2"></span>
+                Iniciando...
+              </>
+            ) : (
+              <>
+                <i className="fas fa-sign-in-alt me-2"></i>
+                Ingresar
+              </>
+            )}
+          </button>
+        </form>
+        
+        <div className="mt-3 text-center">
+          <p className="text-muted mb-0">Demo: admin@inventario.com / admin123</p>
         </div>
       </div>
     </div>
-  );
-};
+  )
+}
 
-export default Login;
+export default Login

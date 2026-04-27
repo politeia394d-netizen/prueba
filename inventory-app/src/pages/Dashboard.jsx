@@ -1,267 +1,334 @@
-import React, { useState } from 'react';
-import { Chart as ChartJS, CategoryScale, LinearScale, PointElement, LineElement, BarElement, ArcElement } from 'chart.js';
-import { Bar, Line, Doughnut } from 'react-chartjs-2';
-import moment from 'moment';
+import { useEffect } from 'react'
+import { useDispatch, useSelector } from 'react-redux'
+import { Link, useNavigate } from 'react-router-dom'
+import { logout } from '../store/slices/authSlice'
+import { fetchProducts } from '../store/slices/productsSlice'
+import { fetchMovements } from '../store/slices/movementsSlice'
+import { Chart as ChartJS, CategoryScale, LinearScale, PointElement, LineElement, BarElement, ArcElement, Title, Tooltip, Legend } from 'chart.js'
+import { Bar, Doughnut } from 'react-chartjs-2'
 
-ChartJS.register(CategoryScale, LinearScale, PointElement, LineElement, BarElement, ArcElement);
+ChartJS.register(CategoryScale, LinearScale, PointElement, LineElement, BarElement, ArcElement, Title, Tooltip, Legend)
 
 const Dashboard = () => {
-  const [selectedPeriod, setSelectedPeriod] = useState('month');
+  const dispatch = useDispatch()
+  const navigate = useNavigate()
+  const { user } = useSelector((state) => state.auth)
+  const { items: products } = useSelector((state) => state.products)
+  const { items: movements } = useSelector((state) => state.movements)
 
-  // Datos de ejemplo para el dashboard
-  const statsCards = [
-    { title: 'Productos Totales', value: 1250, icon: 'fa-box', color: 'bg-primary', change: '+12%' },
-    { title: 'Categorías', value: 45, icon: 'fa-tags', color: 'bg-success', change: '+3%' },
-    { title: 'Movimientos (Mes)', value: 387, icon: 'fa-exchange-alt', color: 'bg-warning', change: '+18%' },
-    { title: 'Valor Inventario', value: '$45,230', icon: 'fa-dollar-sign', color: 'bg-info', change: '+8%' },
-  ];
+  useEffect(() => {
+    dispatch(fetchProducts())
+    dispatch(fetchMovements())
+  }, [dispatch])
 
-  const barChartData = {
-    labels: ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun'],
-    datasets: [
-      {
-        label: 'Entradas',
-        data: [65, 59, 80, 81, 56, 55],
-        backgroundColor: 'rgba(54, 162, 235, 0.5)',
-        borderColor: 'rgba(54, 162, 235, 1)',
-        borderWidth: 1,
-      },
-      {
-        label: 'Salidas',
-        data: [28, 48, 40, 19, 86, 27],
-        backgroundColor: 'rgba(255, 99, 132, 0.5)',
-        borderColor: 'rgba(255, 99, 132, 1)',
-        borderWidth: 1,
-      },
-    ],
-  };
+  // Calcular estadísticas
+  const totalProducts = products.length
+  const totalStock = products.reduce((sum, p) => sum + (p.stock || 0), 0)
+  const totalValue = products.reduce((sum, p) => sum + ((p.price || 0) * (p.stock || 0)), 0)
+  const lowStockProducts = products.filter(p => (p.stock || 0) <= (p.minStock || 5)).length
 
-  const lineChartData = {
-    labels: ['Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb', 'Dom'],
-    datasets: [
-      {
-        label: 'Ventas Semanales',
-        data: [12, 19, 3, 5, 2, 3, 15],
-        fill: false,
-        borderColor: 'rgb(75, 192, 192)',
-        tension: 0.1,
-      },
-    ],
-  };
+  // Datos para gráfico de barras - Productos por categoría
+  const categoriesCount = products.reduce((acc, p) => {
+    acc[p.category] = (acc[p.category] || 0) + 1
+    return acc
+  }, {})
 
-  const doughnutChartData = {
-    labels: ['Electrónica', 'Ropa', 'Hogar', 'Deportes'],
-    datasets: [
-      {
-        data: [300, 150, 100, 80],
-        backgroundColor: [
-          'rgba(255, 99, 132, 0.7)',
-          'rgba(54, 162, 235, 0.7)',
-          'rgba(255, 206, 86, 0.7)',
-          'rgba(75, 192, 192, 0.7)',
-        ],
-        borderColor: [
-          'rgba(255, 99, 132, 1)',
-          'rgba(54, 162, 235, 1)',
-          'rgba(255, 206, 86, 1)',
-          'rgba(75, 192, 192, 1)',
-        ],
-        borderWidth: 1,
-      },
-    ],
-  };
+  const barData = {
+    labels: Object.keys(categoriesCount),
+    datasets: [{
+      label: 'Productos por Categoría',
+      data: Object.values(categoriesCount),
+      backgroundColor: [
+        'rgba(54, 162, 235, 0.7)',
+        'rgba(75, 192, 192, 0.7)',
+        'rgba(255, 206, 86, 0.7)',
+        'rgba(153, 102, 255, 0.7)',
+        'rgba(255, 99, 132, 0.7)'
+      ],
+      borderColor: [
+        'rgba(54, 162, 235, 1)',
+        'rgba(75, 192, 192, 1)',
+        'rgba(255, 206, 86, 1)',
+        'rgba(153, 102, 255, 1)',
+        'rgba(255, 99, 132, 1)'
+      ],
+      borderWidth: 1
+    }]
+  }
 
-  const recentMovements = [
-    { id: 1, product: 'Laptop HP ProBook', type: 'entrada', quantity: 10, date: '2024-01-15', user: 'Admin' },
-    { id: 2, product: 'Mouse Logitech', type: 'salida', quantity: 25, date: '2024-01-15', user: 'Juan Pérez' },
-    { id: 3, product: 'Teclado Mecánico', type: 'entrada', quantity: 15, date: '2024-01-14', user: 'Admin' },
-    { id: 4, product: 'Monitor Dell 24"', type: 'salida', quantity: 5, date: '2024-01-14', user: 'María García' },
-    { id: 5, product: 'Webcam HD', type: 'entrada', quantity: 20, date: '2024-01-13', user: 'Admin' },
-  ];
+  // Datos para gráfico doughnut - Distribución de stock
+  const doughnutData = {
+    labels: ['Stock Normal', 'Stock Bajo'],
+    datasets: [{
+      data: [totalProducts - lowStockProducts, lowStockProducts],
+      backgroundColor: [
+        'rgba(40, 167, 69, 0.7)',
+        'rgba(220, 53, 69, 0.7)'
+      ],
+      borderColor: [
+        'rgba(40, 167, 69, 1)',
+        'rgba(220, 53, 69, 1)'
+      ],
+      borderWidth: 1
+    }]
+  }
 
-  const lowStockProducts = [
-    { id: 1, name: 'Cable USB-C', stock: 5, minStock: 10, category: 'Accesorios' },
-    { id: 2, name: 'Auriculares Bluetooth', stock: 3, minStock: 8, category: 'Audio' },
-    { id: 3, name: 'Funda Laptop', stock: 7, minStock: 15, category: 'Accesorios' },
-  ];
+  const handleLogout = async () => {
+    await dispatch(logout())
+    navigate('/login')
+  }
 
   return (
-    <div className="content-wrapper">
-      <div className="content-header">
-        <div className="container-fluid">
-          <div className="row mb-2">
-            <div className="col-sm-6">
-              <h1 className="m-0">Dashboard</h1>
+    <div className="wrapper">
+      {/* Navbar */}
+      <nav className="navbar navbar-expand navbar-white navbar-light">
+        <ul className="navbar-nav">
+          <li className="nav-item">
+            <a className="nav-link" data-widget="pushmenu" href="#" role="button">
+              <i className="fas fa-bars"></i>
+            </a>
+          </li>
+          <li className="nav-item d-none d-sm-inline-block">
+            <Link to="/dashboard" className="nav-link">Inicio</Link>
+          </li>
+        </ul>
+        
+        <ul className="navbar-nav ms-auto">
+          <li className="nav-item dropdown">
+            <a className="nav-link dropdown-toggle" href="#" data-bs-toggle="dropdown">
+              <i className="fas fa-user-circle me-1"></i>
+              {user?.name || 'Usuario'}
+            </a>
+            <div className="dropdown-menu dropdown-menu-lg dropdown-menu-end">
+              <a href="#" className="dropdown-item">
+                <i className="fas fa-user me-2"></i> Perfil
+              </a>
+              <div className="dropdown-divider"></div>
+              <button onClick={handleLogout} className="dropdown-item text-danger">
+                <i className="fas fa-sign-out-alt me-2"></i> Cerrar Sesión
+              </button>
             </div>
-            <div className="col-sm-6">
-              <ol className="breadcrumb float-sm-right">
-                <li className="breadcrumb-item"><a href="#">Inicio</a></li>
-                <li className="breadcrumb-item active">Dashboard</li>
-              </ol>
+          </li>
+        </ul>
+      </nav>
+
+      {/* Main Sidebar */}
+      <aside className="main-sidebar sidebar-dark-primary elevation-4">
+        <Link to="/dashboard" className="brand-link">
+          <span className="brand-text px-3">InventarioPro</span>
+        </Link>
+
+        <div className="sidebar">
+          <nav className="mt-2">
+            <ul className="nav nav-pills nav-sidebar flex-column">
+              <li className="nav-item">
+                <Link to="/dashboard" className="nav-link active">
+                  <i className="nav-icon fas fa-tachometer-alt"></i>
+                  <p>Dashboard</p>
+                </Link>
+              </li>
+              <li className="nav-item">
+                <Link to="/products" className="nav-link">
+                  <i className="nav-icon fas fa-box"></i>
+                  <p>Productos</p>
+                </Link>
+              </li>
+              <li className="nav-item">
+                <Link to="/categories" className="nav-link">
+                  <i className="nav-icon fas fa-tags"></i>
+                  <p>Categorías</p>
+                </Link>
+              </li>
+              <li className="nav-item">
+                <Link to="/movements" className="nav-link">
+                  <i className="nav-icon fas fa-exchange-alt"></i>
+                  <p>Movimientos</p>
+                </Link>
+              </li>
+              <li className="nav-item">
+                <Link to="/reports" className="nav-link">
+                  <i className="nav-icon fas fa-chart-line"></i>
+                  <p>Reportes</p>
+                </Link>
+              </li>
+            </ul>
+          </nav>
+        </div>
+      </aside>
+
+      {/* Content Wrapper */}
+      <div className="content-wrapper">
+        {/* Content Header */}
+        <div className="content-header">
+          <div className="container-fluid">
+            <div className="row mb-2">
+              <div className="col-sm-6">
+                <h1 className="m-0">Dashboard</h1>
+              </div>
+              <div className="col-sm-6">
+                <ol className="breadcrumb float-sm-end">
+                  <li className="breadcrumb-item"><Link to="/">Home</Link></li>
+                  <li className="breadcrumb-item active">Dashboard</li>
+                </ol>
+              </div>
             </div>
           </div>
         </div>
+
+        {/* Main content */}
+        <section className="content">
+          <div className="container-fluid">
+            {/* Info boxes */}
+            <div className="row">
+              <div className="col-12 col-sm-6 col-md-3">
+                <div className="info-box">
+                  <span className="info-box-icon bg-gradient-primary">
+                    <i className="fas fa-box"></i>
+                  </span>
+                  <div className="info-box-content">
+                    <span className="info-box-text">Total Productos</span>
+                    <span className="info-box-number">{totalProducts}</span>
+                  </div>
+                </div>
+              </div>
+              
+              <div className="col-12 col-sm-6 col-md-3">
+                <div className="info-box mb-3">
+                  <span className="info-box-icon bg-gradient-success">
+                    <i className="fas fa-cubes"></i>
+                  </span>
+                  <div className="info-box-content">
+                    <span className="info-box-text">Stock Total</span>
+                    <span className="info-box-number">{totalStock}</span>
+                  </div>
+                </div>
+              </div>
+              
+              <div className="col-12 col-sm-6 col-md-3">
+                <div className="info-box mb-3">
+                  <span className="info-box-icon bg-gradient-warning">
+                    <i className="fas fa-dollar-sign"></i>
+                  </span>
+                  <div className="info-box-content">
+                    <span className="info-box-text">Valor Inventario</span>
+                    <span className="info-box-number">${totalValue.toLocaleString('es-ES', { minimumFractionDigits: 2 })}</span>
+                  </div>
+                </div>
+              </div>
+              
+              <div className="col-12 col-sm-6 col-md-3">
+                <div className="info-box mb-3">
+                  <span className="info-box-icon bg-gradient-danger">
+                    <i className="fas fa-exclamation-triangle"></i>
+                  </span>
+                  <div className="info-box-content">
+                    <span className="info-box-text">Stock Bajo</span>
+                    <span className="info-box-number">{lowStockProducts}</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Alertas de stock bajo */}
+            {lowStockProducts > 0 && (
+              <div className="row">
+                <div className="col-12">
+                  <div className="alert alert-stock-bajo">
+                    <h5><i className="icon fas fa-exclamation-triangle"></i> Alerta de Stock Bajo</h5>
+                    <p>Los siguientes productos tienen stock por debajo del mínimo:</p>
+                    <ul className="mb-0">
+                      {products.filter(p => (p.stock || 0) <= (p.minStock || 5)).map(p => (
+                        <li key={p.id}><strong>{p.name}</strong>: {p.stock} unidades (mínimo: {p.minStock})</li>
+                      ))}
+                    </ul>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* Gráficos */}
+            <div className="row">
+              <div className="col-md-6">
+                <div className="card">
+                  <div className="card-header">
+                    <h3 className="card-title">Productos por Categoría</h3>
+                  </div>
+                  <div className="card-body">
+                    <div className="chart-container">
+                      <Bar data={barData} options={{ responsive: true, maintainAspectRatio: false }} />
+                    </div>
+                  </div>
+                </div>
+              </div>
+              
+              <div className="col-md-6">
+                <div className="card">
+                  <div className="card-header">
+                    <h3 className="card-title">Distribución de Stock</h3>
+                  </div>
+                  <div className="card-body">
+                    <div className="chart-container">
+                      <Doughnut data={doughnutData} options={{ responsive: true, maintainAspectRatio: false }} />
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Últimos movimientos */}
+            <div className="row">
+              <div className="col-12">
+                <div className="card">
+                  <div className="card-header">
+                    <h3 className="card-title">Últimos Movimientos</h3>
+                    <Link to="/movements" className="btn btn-sm btn-primary float-end">Ver todos</Link>
+                  </div>
+                  <div className="card-body p-0">
+                    <div className="table-responsive">
+                      <table className="table table-striped">
+                        <thead>
+                          <tr>
+                            <th>Fecha</th>
+                            <th>Producto</th>
+                            <th>Tipo</th>
+                            <th>Cantidad</th>
+                            <th>Usuario</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {movements.slice(0, 5).map(movement => (
+                            <tr key={movement.id}>
+                              <td>{new Date(movement.date).toLocaleDateString('es-ES')}</td>
+                              <td>{movement.productName}</td>
+                              <td>
+                                <span className={`badge ${movement.type === 'entrada' ? 'bg-success' : 'bg-danger'}`}>
+                                  {movement.type === 'entrada' ? 'Entrada' : 'Salida'}
+                                </span>
+                              </td>
+                              <td>{movement.quantity}</td>
+                              <td>{movement.user}</td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
       </div>
 
-      <section className="content">
-        <div className="container-fluid">
-          {/* Stats Cards */}
-          <div className="row">
-            {statsCards.map((stat, index) => (
-              <div className="col-lg-3 col-6" key={index}>
-                <div className="small-box card-widget">
-                  <div className={`inner ${stat.color} text-white`}>
-                    <h3>{stat.value}</h3>
-                    <p>{stat.title}</p>
-                  </div>
-                  <div className="icon">
-                    <i className={`fas ${stat.icon}`}></i>
-                  </div>
-                  <a href="#" className="small-box-footer">
-                    Más info <i className="fas fa-arrow-circle-right"></i>
-                  </a>
-                  <span className={`small-box-footer ${stat.change.includes('+') ? 'text-success' : 'text-danger'}`}>
-                    {stat.change} vs mes anterior
-                  </span>
-                </div>
-              </div>
-            ))}
-          </div>
-
-          {/* Charts Row */}
-          <div className="row">
-            <div className="col-md-6">
-              <div className="card">
-                <div className="card-header">
-                  <h3 className="card-title">Movimientos Mensuales</h3>
-                  <div className="card-tools">
-                    <select 
-                      className="form-control form-control-sm"
-                      value={selectedPeriod}
-                      onChange={(e) => setSelectedPeriod(e.target.value)}
-                    >
-                      <option value="week">Semana</option>
-                      <option value="month">Mes</option>
-                      <option value="year">Año</option>
-                    </select>
-                  </div>
-                </div>
-                <div className="card-body">
-                  <Bar data={barChartData} options={{ responsive: true }} />
-                </div>
-              </div>
-            </div>
-
-            <div className="col-md-6">
-              <div className="card">
-                <div className="card-header">
-                  <h3 className="card-title">Distribución por Categoría</h3>
-                </div>
-                <div className="card-body">
-                  <Doughnut data={doughnutChartData} options={{ responsive: true }} />
-                </div>
-              </div>
-            </div>
-          </div>
-
-          {/* Second Charts Row */}
-          <div className="row">
-            <div className="col-md-12">
-              <div className="card">
-                <div className="card-header">
-                  <h3 className="card-title">Tendencia de Ventas Semanales</h3>
-                </div>
-                <div className="card-body">
-                  <Line data={lineChartData} options={{ responsive: true }} />
-                </div>
-              </div>
-            </div>
-          </div>
-
-          {/* Tables Row */}
-          <div className="row">
-            <div className="col-md-6">
-              <div className="card">
-                <div className="card-header">
-                  <h3 className="card-title">Últimos Movimientos</h3>
-                  <div className="card-tools">
-                    <button type="button" className="btn btn-tool btn-primary btn-sm">
-                      <i className="fas fa-plus"></i> Nuevo Movimiento
-                    </button>
-                  </div>
-                </div>
-                <div className="card-body p-0">
-                  <table className="table table-striped table-hover">
-                    <thead>
-                      <tr>
-                        <th>Producto</th>
-                        <th>Tipo</th>
-                        <th>Cant.</th>
-                        <th>Fecha</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {recentMovements.map((movement) => (
-                        <tr key={movement.id}>
-                          <td>{movement.product}</td>
-                          <td>
-                            <span className={`badge badge-${movement.type === 'entrada' ? 'success' : 'danger'}`}>
-                              {movement.type}
-                            </span>
-                          </td>
-                          <td>{movement.quantity}</td>
-                          <td>{moment(movement.date).format('DD/MM/YYYY')}</td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
-                <div className="card-footer clearfix">
-                  <a href="#" className="btn btn-sm btn-info float-left">Ver Todos</a>
-                </div>
-              </div>
-            </div>
-
-            <div className="col-md-6">
-              <div className="card">
-                <div className="card-header">
-                  <h3 className="card-title">Stock Bajo</h3>
-                  <span className="badge badge-danger ml-2">{lowStockProducts.length} productos</span>
-                </div>
-                <div className="card-body p-0">
-                  <table className="table table-striped">
-                    <thead>
-                      <tr>
-                        <th>Producto</th>
-                        <th>Stock</th>
-                        <th>Mínimo</th>
-                        <th>Estado</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {lowStockProducts.map((product) => (
-                        <tr key={product.id}>
-                          <td>{product.name}</td>
-                          <td className="text-danger font-weight-bold">{product.stock}</td>
-                          <td>{product.minStock}</td>
-                          <td>
-                            <span className="badge badge-danger">Crítico</span>
-                          </td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
-                <div className="card-footer clearfix">
-                  <a href="/products" className="btn btn-sm btn-warning float-left">Gestionar Stock</a>
-                </div>
-              </div>
-            </div>
-          </div>
+      {/* Footer */}
+      <footer className="main-footer">
+        <div className="float-end d-none d-sm-inline">
+          <b>Versión</b> 1.0.0
         </div>
-      </section>
+        <strong>InventarioPro</strong> - Sistema de Gestión de Inventarios
+      </footer>
     </div>
-  );
-};
+  )
+}
 
-export default Dashboard;
+export default Dashboard
