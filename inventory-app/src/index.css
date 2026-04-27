@@ -1,0 +1,247 @@
+/* Custom styles for Inventory Pro */
+
+body {
+  font-family: 'Source Sans Pro', sans-serif;
+}
+
+/* Dashboard widgets */
+.small-box {
+  border-radius: 0.25rem;
+  box-shadow: 0 0 1px rgba(0, 0, 0, .125), 0 1px 3px rgba(0, 0, 0, .2);
+  display: block;
+  margin-bottom: 20px;
+  position: relative;
+}
+
+.small-box > .inner {
+  padding: 10px;
+}
+
+.small-box h3 {
+  font-size: 2.2rem;
+  font-weight: bold;
+  margin: 0 0 10px 0;
+  white-space: nowrap;
+  padding: 0;
+}
+
+.small-box p {
+  font-size: 1rem;
+}
+
+.small-box .icon {
+  color: rgba(0, 0, 0, 0.15);
+  z-index: 0;
+}
+
+.small-box .icon > i {
+  font-size: 90px;
+  position: absolute;
+  right: 15px;
+  top: 15px;
+  transition: all 0.3s linear;
+}
+
+.small-box:hover {
+  text-decoration: none;
+}
+
+.small-box:hover .icon > i {
+  font-size: 97px;
+}
+
+/* Card improvements */
+.card {
+  box-shadow: 0 0 1px rgba(0, 0, 0, .125), 0 1px 3px rgba(0, 0, 0, .2);
+  margin-bottom: 1rem;
+}
+
+.card-header {
+  background-color: transparent;
+  border-bottom: 1px solid #dee2e6;
+  padding: 0.75rem 1.25rem;
+  position: relative;
+  border-top-left-radius: 0.25rem;
+  border-top-right-radius: 0.25rem;
+}
+
+/* Table improvements */
+.table thead th {
+  border-bottom: 2px solid #dee2e6;
+  font-weight: 600;
+}
+
+.table-hover tbody tr:hover {
+  background-color: rgba(0, 0, 0, .075);
+}
+
+/* Badge improvements */
+.badge {
+  font-weight: 400;
+  padding: 0.25em 0.4em;
+}
+
+/* Form improvements */
+.form-control:focus {
+  border-color: #80bdff;
+  box-shadow: 0 0 0 0.2rem rgba(0, 123, 255, .25);
+}
+
+/* Button improvements */
+.btn {
+  font-weight: 500;
+}
+
+.btn-app {
+  border-radius: 0.25rem;
+  border: 1px solid #ddd;
+  color: #6c757d;
+  font-size: 14px;
+  height: 60px;
+  margin: 0 0 10px 0;
+  min-width: 80px;
+  padding: 15px 5px;
+  position: relative;
+  text-align: center;
+  width: 100%;
+}
+
+.btn-app > .fa,
+.btn-app > .fas,
+.btn-app > .far,
+.btn-app > .fab,
+.btn-app > .fal,
+.btn-app > .fad,
+.btn-app > .svg-inline--fa,
+.btn-app > .ion {
+  display: block;
+  font-size: 20px;
+}
+
+/* Sidebar improvements */
+.main-sidebar {
+  box-shadow: 0 14px 28px rgba(0, 0, 0, .25), 0 10px 10px rgba(0, 0, 0, .22);
+}
+
+.nav-sidebar > .nav-item > .nav-link.active {
+  background-color: #007bff;
+  color: #fff;
+}
+
+/* Login page improvements */
+.login-page {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  min-height: 100vh;
+}
+
+.login-box {
+  max-width: 400px;
+  margin: 7% auto;
+}
+
+.login-card-body {
+  background: #fff;
+  border-top: 0;
+  color: #666;
+  padding: 20px;
+}
+
+.login-card-body .input-group {
+  margin-bottom: 15px;
+}
+
+/* Responsive improvements */
+@media (max-width: 768px) {
+  .small-box h3 {
+    font-size: 1.5rem;
+  }
+  
+  .small-box .icon > i {
+    font-size: 60px;
+  }
+}
+
+/* Loading spinner */
+.spinner-border-sm {
+  width: 1rem;
+  height: 1rem;
+  border-width: 0.2em;
+}
+
+/* Info boxes */
+.info-box {
+  box-shadow: 0 0 1px rgba(0, 0, 0, .125), 0 1px 3px rgba(0, 0, 0, .2);
+  border-radius: 0.25rem;
+  background: #fff;
+  display: flex;
+  margin-bottom: 15px;
+  min-height: 80px;
+  padding: 0.5rem;
+  position: relative;
+  width: 100%;
+}
+
+.info-box-icon {
+  border-radius: 0.25rem;
+  align-items: center;
+  display: flex;
+  font-size: 1.875rem;
+  justify-content: center;
+  text-align: center;
+  width: 70px;
+}
+
+.info-box-icon.elevation-1 {
+  box-shadow: 0 1px 3px rgba(0, 0, 0, .12), 0 1px 2px rgba(0, 0, 0, .24);
+}
+
+.info-box-content {
+  align-self: center;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  line-height: 1.8;
+  flex: 1;
+  padding-left: 10px;
+  overflow: hidden;
+}
+
+.info-box-text {
+  display: block;
+  font-size: 0.9rem;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.info-box-number {
+  display: block;
+  font-weight: 700;
+  font-size: 1.25rem;
+}
+
+/* Modal improvements */
+.modal-content {
+  border: none;
+  border-radius: 0.3rem;
+  box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15);
+}
+
+.modal-header {
+  border-bottom: 1px solid #dee2e6;
+  padding: 1rem;
+}
+
+.modal-footer {
+  border-top: 1px solid #dee2e6;
+  padding: 1rem;
+}
+
+/* SweetAlert customizations */
+.swal2-popup {
+  border-radius: 0.3rem !important;
+}
+
+.swal2-confirm {
+  background-color: #007bff !important;
+}
